@@ -28,7 +28,7 @@ class ProjectStore {
   }
 
   remove(id: string): void {
-    const projects = this.getAll().filter((p) => p.id \!== id);
+    const projects = this.getAll().filter((p) => p.id !== id);
     this.store.set("projects", projects);
   }
 

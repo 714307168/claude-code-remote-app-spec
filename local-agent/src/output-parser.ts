@@ -1,5 +1,11 @@
 import { EventEmitter } from "events";
-import stripAnsi from "strip-ansi";
+
+// Inline strip-ansi to avoid ESM/CJS compatibility issues with v7+
+// eslint-disable-next-line no-control-regex
+const ansiRegex = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[-a-zA-Z\d/#&.:=?%@~_]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g;
+function stripAnsi(str: string): string {
+  return str.replace(ansiRegex, "");
+}
 
 class OutputParser extends EventEmitter {
   private buffer: string = "";
@@ -12,14 +18,12 @@ class OutputParser extends EventEmitter {
     this.buffer += clean;
 
     // Prompt patterns: Claude Code shows "> " or "? " on a new line when waiting
-    const promptPattern = /(
-|^)[>?]\s*$/;
+    const promptPattern = /(\n|^)[>?]\s*$/;
 
-    if (\!this.inResponse) {
-      const lines = this.buffer.split("
-");
+    if (!this.inResponse) {
+      const lines = this.buffer.split("\n");
       const hasContent = lines.some(
-        (l) => l.trim().length > 0 && \!/^[>?]\s*$/.test(l.trim())
+        (l) => l.trim().length > 0 && !/^[>?]\s*$/.test(l.trim())
       );
       if (hasContent) {
         this.inResponse = true;

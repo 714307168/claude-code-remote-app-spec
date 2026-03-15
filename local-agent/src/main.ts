@@ -5,11 +5,17 @@ import RelayClient from "./relay-client";
 import MessageRouter from "./message-router";
 import projectStore from "./project-store";
 import ptyManager from "./pty-manager";
+import { t, getLang, setLang, getAllMessages, Lang } from "./i18n";
 
 interface AgentConfig {
   serverUrl: string;
   agentId: string;
   token: string;
+}
+
+interface AppSettings {
+  autoStart: boolean;
+  silentLaunch: boolean;
 }
 
 const configStore = new Store<AgentConfig>({
@@ -20,8 +26,17 @@ const configStore = new Store<AgentConfig>({
   },
 });
 
+const appSettingsStore = new Store<AppSettings>({
+  name: "app-settings",
+  defaults: {
+    autoStart: false,
+    silentLaunch: false,
+  },
+});
+
 const projectWindows: Map<string, BrowserWindow> = new Map();
 let tray: Tray | null = null;
+let mainWindow: BrowserWindow | null = null;
 let relayClient: RelayClient | null = null;
 
 function loadConfig(): AgentConfig {
@@ -33,35 +48,62 @@ function loadConfig(): AgentConfig {
 }
 
 function createTray(): Tray {
-  const iconPath = path.join(__dirname, "..", "assets", "tray-icon.png");
+  const iconPath = path.join(__dirname, "..", "..", "assets", "tray-icon.png");
   const icon = nativeImage.createFromPath(iconPath);
-  const t = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
-  t.setToolTip("Claude Code Agent");
+  const trayInstance = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
+  trayInstance.setToolTip(t("app.name"));
+  rebuildTrayMenu(trayInstance);
+  trayInstance.on("click", () => {
+    // Click tray icon to show main window
+    showMainWindow();
+  });
+  return trayInstance;
+}
 
-  const buildMenu = () => {
-    const projects = projectStore.getAll();
-    const projectItems: Electron.MenuItemConstructorOptions[] = projects.map((p) => ({
-      label: p.name,
-      click: () => createProjectWindow(p.id, p.name),
-    }));
+function rebuildTrayMenu(trayInstance?: Tray): void {
+  const tr = trayInstance ?? tray;
+  if (!tr) return;
+  const projects = projectStore.getAll();
+  const projectItems: Electron.MenuItemConstructorOptions[] = projects.map((p) => ({
+    label: p.name,
+    click: () => createProjectWindow(p.id, p.name),
+  }));
 
-    const menu = Menu.buildFromTemplate([
-      { label: "Claude Code Agent", enabled: false },
-      { type: "separator" },
-      ...(projectItems.length > 0
-        ? projectItems
-        : [{ label: "No projects configured", enabled: false } as Electron.MenuItemConstructorOptions]),
-      { type: "separator" },
-      { label: "Settings", click: () => openSettingsWindow() },
-      { type: "separator" },
-      { label: "Quit", click: () => app.quit() },
-    ]);
-    t.setContextMenu(menu);
-  };
+  const menu = Menu.buildFromTemplate([
+    { label: t("app.name"), enabled: false },
+    { type: "separator" },
+    { label: t("tray.showMain"), click: () => showMainWindow() },
+    ...(projectItems.length > 0
+      ? projectItems
+      : [{ label: t("tray.noProjects"), enabled: false } as Electron.MenuItemConstructorOptions]),
+    { type: "separator" },
+    { label: t("tray.settings"), click: () => openSettingsWindow() },
+    { type: "separator" },
+    { label: t("tray.quit"), click: () => app.quit() },
+  ]);
+  tr.setContextMenu(menu);
+}
 
-  buildMenu();
-  t.on("click", buildMenu);
-  return t;
+function showMainWindow(): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    return;
+  }
+  mainWindow = new BrowserWindow({
+    width: 600,
+    height: 520,
+    title: t("app.name"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  mainWindow.loadFile(path.join(__dirname, "..", "..", "renderer", "settings.html"));
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 }
 
 function createProjectWindow(projectId: string, projectName: string): BrowserWindow {
@@ -74,16 +116,17 @@ function createProjectWindow(projectId: string, projectName: string): BrowserWin
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-    title: projectName + " - Claude Code Agent",
+    title: projectName + " - " + t("app.name"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+
       contextIsolation: true,
       nodeIntegration: false,
     },
     backgroundColor: "#1e1e1e",
   });
 
-  win.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
+  win.loadFile(path.join(__dirname, "..", "..", "renderer", "index.html"));
 
   win.webContents.on("did-finish-load", () => {
     win.webContents.send("project-id", projectId);
@@ -116,17 +159,8 @@ function createProjectWindow(projectId: string, projectName: string): BrowserWin
 }
 
 function openSettingsWindow(): void {
-  const win = new BrowserWindow({
-    width: 500,
-    height: 400,
-    title: "Agent Settings",
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
-  win.loadFile(path.join(__dirname, "..", "renderer", "settings.html"));
+  // Reuse main window if it exists
+  showMainWindow();
 }
 
 function initRelay(config: AgentConfig): void {
@@ -140,12 +174,12 @@ function initRelay(config: AgentConfig): void {
 
   relayClient.on("connected", () => {
     console.log("[Main] Relay connected");
-    if (tray) tray.setToolTip("Claude Code Agent (connected)");
+    if (tray) tray.setToolTip(t("tray.connected"));
   });
 
   relayClient.on("disconnected", () => {
     console.log("[Main] Relay disconnected");
-    if (tray) tray.setToolTip("Claude Code Agent (disconnected)");
+    if (tray) tray.setToolTip(t("tray.disconnected"));
   });
 
   relayClient.on("error", (err: Error) => {
@@ -208,10 +242,47 @@ ipcMain.handle("reconnect-relay", () => {
   return true;
 });
 
+ipcMain.handle("get-lang", () => getLang());
+
+ipcMain.handle("set-lang", (_event, lang: Lang) => {
+  setLang(lang);
+  if (tray) {
+    tray.setToolTip(t("app.name"));
+    rebuildTrayMenu();
+  }
+  return true;
+});
+
+ipcMain.handle("get-i18n-messages", () => getAllMessages());
+
+ipcMain.handle("get-app-settings", () => {
+  return {
+    autoStart: appSettingsStore.get("autoStart") as boolean,
+    silentLaunch: appSettingsStore.get("silentLaunch") as boolean,
+  };
+});
+
+ipcMain.handle("set-app-settings", (_event, settings: Partial<AppSettings>) => {
+  if (settings.autoStart !== undefined) {
+    appSettingsStore.set("autoStart", settings.autoStart);
+    app.setLoginItemSettings({ openAtLogin: settings.autoStart });
+  }
+  if (settings.silentLaunch !== undefined) {
+    appSettingsStore.set("silentLaunch", settings.silentLaunch);
+  }
+  return true;
+});
+
 app.whenReady().then(() => {
   tray = createTray();
   const config = loadConfig();
   initRelay(config);
+
+  // Open main window unless silent launch is configured
+  const silentLaunch = appSettingsStore.get("silentLaunch") as boolean;
+  if (!silentLaunch) {
+    showMainWindow();
+  }
 });
 
 app.on("window-all-closed", (_event: Electron.Event) => {

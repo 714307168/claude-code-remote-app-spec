@@ -49,6 +49,12 @@ class TokenStore(context: Context) {
 
     fun getE2EPublicKey(): String? = prefs.getString(KEY_E2E_PUBLIC, null)
 
+    fun saveLanguage(lang: String) {
+        prefs.edit().putString(KEY_LANGUAGE, lang).apply()
+    }
+
+    fun getLanguage(): String = prefs.getString(KEY_LANGUAGE, "en") ?: "en"
+
     fun clear() {
         prefs.edit().clear().apply()
     }
@@ -60,5 +66,6 @@ class TokenStore(context: Context) {
         private const val KEY_E2E_ENABLED = "e2e_enabled"
         private const val KEY_E2E_PRIVATE = "e2e_private_key"
         private const val KEY_E2E_PUBLIC = "e2e_public_key"
+        private const val KEY_LANGUAGE = "language"
     }
 }

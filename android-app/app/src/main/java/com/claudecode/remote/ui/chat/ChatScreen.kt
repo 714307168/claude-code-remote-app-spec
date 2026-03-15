@@ -22,6 +22,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.claudecode.remote.R
 import com.claudecode.remote.data.model.Message
 import com.claudecode.remote.data.model.MessageRole
 import kotlinx.coroutines.launch
@@ -68,7 +70,7 @@ fun ChatScreen(
             },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -93,7 +95,7 @@ fun ChatScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No messages yet. Start a conversation.",
+                    text = stringResource(R.string.no_messages),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -197,7 +199,7 @@ private fun InputBar(
             OutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
-                placeholder = { Text("Type a message...") },
+                placeholder = { Text(stringResource(R.string.message_hint)) },
                 modifier = Modifier.weight(1f),
                 enabled = enabled,
                 maxLines = 4,
@@ -208,7 +210,7 @@ private fun InputBar(
                 onClick = onSend,
                 enabled = enabled && text.isNotBlank()
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.send_message))
             }
         }
     }

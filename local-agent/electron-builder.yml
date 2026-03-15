@@ -2,6 +2,12 @@ appId: com.claudecode.agent
 productName: "Claude Code Agent"
 asar: true
 
+files:
+  - "dist/**/*"
+  - "renderer/**/*"
+  - "assets/**/*"
+  - "package.json"
+
 directories:
   output: release
 
@@ -11,7 +17,7 @@ extraResources:
 
 win:
   target:
-    - target: nsis
+    - target: dir
       arch:
         - x64
 

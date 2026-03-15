@@ -25,11 +25,22 @@ import com.claudecode.remote.ui.settings.SettingsState
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Apply saved language before setting content
+        val tempStore = TokenStore(applicationContext)
+        val savedLang = tempStore.getLanguage()
+        val locale = Locale(savedLang)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(config, resources.displayMetrics)
+
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
@@ -98,13 +109,25 @@ class MainActivity : ComponentActivity() {
                                 deviceId = tokenStore.getDeviceId() ?: "",
                                 token = tokenStore.getToken() ?: "",
                                 e2eEnabled = tokenStore.isE2EEnabled(),
-                                e2ePublicKey = e2eCrypto.getPublicKeyBase64()
+                                e2ePublicKey = e2eCrypto.getPublicKeyBase64(),
+                                language = tokenStore.getLanguage()
                             ),
                             onSave = { url, devId, tok, e2e ->
                                 tokenStore.saveServerUrl(url)
                                 tokenStore.saveDeviceId(devId)
                                 tokenStore.saveToken(tok)
                                 tokenStore.saveE2EEnabled(e2e)
+                            },
+                            onLanguageChange = { lang ->
+                                tokenStore.saveLanguage(lang)
+                                val locale = Locale(lang)
+                                Locale.setDefault(locale)
+                                val config = resources.configuration
+                                config.setLocale(locale)
+                                @Suppress("DEPRECATION")
+                                resources.updateConfiguration(config, resources.displayMetrics)
+                                // Recreate to apply
+                                recreate()
                             },
                             onNavigateBack = { navController.popBackStack() }
                         )

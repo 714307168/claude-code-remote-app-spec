@@ -6,7 +6,7 @@
   <title>Agent Settings</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1e1e1e; color: #ccc; padding: 24px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1e1e1e; color: #ccc; padding: 24px; overflow-y: auto; }
     h1 { font-size: 18px; color: #fff; margin-bottom: 20px; }
     .section { margin-bottom: 24px; }
     .section h2 { font-size: 13px; text-transform: uppercase; color: #888; margin-bottom: 12px; letter-spacing: 0.5px; }
@@ -16,6 +16,12 @@
       border-radius: 4px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none;
     }
     input:focus { border-color: #007acc; }
+    select {
+      width: 100%; padding: 8px 12px; background: #2d2d2d; border: 1px solid #444;
+      border-radius: 4px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none;
+      appearance: auto;
+    }
+    select:focus { border-color: #007acc; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .toggle-row label { margin-bottom: 0; }
     .toggle { position: relative; width: 40px; height: 22px; }
@@ -43,28 +49,55 @@
   </style>
 </head>
 <body>
-  <h1>Agent Settings</h1>
+  <h1 id="title">Agent Settings</h1>
 
   <div class="section">
-    <h2>Server Connection</h2>
-    <label for="serverUrl">Relay Server URL</label>
+    <h2 id="langSection">Language</h2>
+    <label id="langLabel">Interface Language</label>
+    <select id="langSelect">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <h2 id="launchSection">Launch</h2>
+    <div class="toggle-row">
+      <label id="autoStartLabel">Start on Boot</label>
+      <div class="toggle">
+        <input type="checkbox" id="autoStartToggle">
+        <span class="slider"></span>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <label id="silentLaunchLabel">Silent Launch (minimize to tray)</label>
+      <div class="toggle">
+        <input type="checkbox" id="silentLaunchToggle">
+        <span class="slider"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 id="serverSection">Server Connection</h2>
+    <label id="serverUrlLabel">Relay Server URL</label>
     <input type="text" id="serverUrl" placeholder="ws://localhost:8080/ws">
-    <label for="agentId">Agent ID</label>
+    <label id="agentIdLabel">Agent ID</label>
     <input type="text" id="agentId" placeholder="Enter your agent ID">
-    <label for="token">Authentication Token</label>
+    <label id="tokenLabel">Authentication Token</label>
     <input type="password" id="token" placeholder="JWT token">
   </div>
 
   <div class="section">
-    <h2>End-to-End Encryption</h2>
+    <h2 id="e2eSection">End-to-End Encryption</h2>
     <div class="toggle-row">
-      <label>Enable E2E Encryption</label>
+      <label id="e2eLabel">Enable E2E Encryption</label>
       <div class="toggle">
         <input type="checkbox" id="e2eToggle">
         <span class="slider"></span>
       </div>
     </div>
-    <label>Public Key</label>
+    <label id="pubkeyLabel">Public Key</label>
     <div class="pubkey" id="pubkey">&mdash;</div>
   </div>
 
@@ -76,17 +109,64 @@
 
   <script>
     const api = window.claudeAgent;
+    let msgs = {};
+
+    function applyI18n() {
+      document.getElementById('title').textContent = msgs['settings.title'] || 'Agent Settings';
+      document.getElementById('langSection').textContent = msgs['settings.language'] || 'Language';
+      document.getElementById('langLabel').textContent = msgs['settings.languageLabel'] || 'Interface Language';
+      document.getElementById('launchSection').textContent = msgs['settings.launch'] || 'Launch';
+      document.getElementById('autoStartLabel').textContent = msgs['settings.autoStart'] || 'Start on Boot';
+      document.getElementById('silentLaunchLabel').textContent = msgs['settings.silentLaunch'] || 'Silent Launch (minimize to tray)';
+      document.getElementById('serverSection').textContent = msgs['settings.serverConnection'] || 'Server Connection';
+      document.getElementById('serverUrlLabel').textContent = msgs['settings.relayServerUrl'] || 'Relay Server URL';
+      document.getElementById('agentIdLabel').textContent = msgs['settings.agentId'] || 'Agent ID';
+      document.getElementById('agentId').placeholder = msgs['settings.agentIdPlaceholder'] || 'Enter your agent ID';
+      document.getElementById('tokenLabel').textContent = msgs['settings.token'] || 'Authentication Token';
+      document.getElementById('token').placeholder = msgs['settings.tokenPlaceholder'] || 'JWT token';
+      document.getElementById('e2eSection').textContent = msgs['settings.e2e'] || 'End-to-End Encryption';
+      document.getElementById('e2eLabel').textContent = msgs['settings.e2eEnable'] || 'Enable E2E Encryption';
+      document.getElementById('pubkeyLabel').textContent = msgs['settings.publicKey'] || 'Public Key';
+      document.getElementById('saveBtn').textContent = msgs['settings.save'] || 'Save & Reconnect';
+      document.getElementById('cancelBtn').textContent = msgs['settings.cancel'] || 'Cancel';
+    }
 
     async function loadSettings() {
-      const config = await api.getConfig();
+      const [config, e2e, lang, i18nMessages, appSettings] = await Promise.all([
+        api.getConfig(),
+        api.getE2EStatus(),
+        api.getLang(),
+        api.getI18nMessages(),
+        api.getAppSettings(),
+      ]);
+
       document.getElementById('serverUrl').value = config.serverUrl || '';
       document.getElementById('agentId').value = config.agentId || '';
       document.getElementById('token').value = config.token || '';
-
-      const e2e = await api.getE2EStatus();
       document.getElementById('e2eToggle').checked = e2e.enabled;
       document.getElementById('pubkey').textContent = e2e.publicKey || '\u2014';
+      document.getElementById('langSelect').value = lang || 'en';
+      document.getElementById('autoStartToggle').checked = appSettings.autoStart || false;
+      document.getElementById('silentLaunchToggle').checked = appSettings.silentLaunch || false;
+
+      msgs = i18nMessages || {};
+      applyI18n();
     }
+
+    document.getElementById('langSelect').addEventListener('change', async (e) => {
+      const lang = e.target.value;
+      await api.setLang(lang);
+      msgs = await api.getI18nMessages();
+      applyI18n();
+    });
+
+    document.getElementById('autoStartToggle').addEventListener('change', async (e) => {
+      await api.setAppSettings({ autoStart: e.target.checked });
+    });
+
+    document.getElementById('silentLaunchToggle').addEventListener('change', async (e) => {
+      await api.setAppSettings({ silentLaunch: e.target.checked });
+    });
 
     document.getElementById('saveBtn').addEventListener('click', async () => {
       const config = {
@@ -100,13 +180,13 @@
         await api.saveConfig(config);
         await api.setE2EEnabled(e2eEnabled);
         await api.reconnectRelay();
-        showStatus('Settings saved. Reconnecting...', false);
+        showStatus(msgs['settings.saved'] || 'Settings saved. Reconnecting...', false);
         setTimeout(async () => {
           const e2e = await api.getE2EStatus();
           document.getElementById('pubkey').textContent = e2e.publicKey || '\u2014';
         }, 1000);
       } catch (err) {
-        showStatus('Failed to save: ' + err.message, true);
+        showStatus((msgs['settings.saveFailed'] || 'Failed to save: ') + err.message, true);
       }
     });
 

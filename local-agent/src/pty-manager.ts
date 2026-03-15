@@ -48,7 +48,7 @@ class PtyManager {
 
   write(projectId: string, input: string): void {
     const session = this.sessions.get(projectId);
-    if (\!session) {
+    if (!session) {
       throw new Error(`No PTY session for project ${projectId}`);
     }
     session.pty.write(input);

@@ -12,10 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.claudecode.remote.R
 import com.claudecode.remote.data.model.Session
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionListScreen(
     viewModel: SessionViewModel,
@@ -36,10 +39,10 @@ fun SessionListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Claude Code Remote") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -49,7 +52,7 @@ fun SessionListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add session")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_session))
             }
         }
     ) { padding ->
@@ -58,7 +61,7 @@ fun SessionListScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (uiState.sessions.isEmpty()) {
                 Text(
-                    text = "No sessions yet. Tap + to add one.",
+                    text = stringResource(R.string.no_sessions),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -68,7 +71,7 @@ fun SessionListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+            ) {
                     items(uiState.sessions, key = { it.id }) { session ->
                         SessionCard(
                             session = session,
@@ -79,11 +82,11 @@ fun SessionListScreen(
                 }
             }
 
-            uiState.error?.let
+            uiState.error?.let { error ->
                 Snackbar(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                     action = {
-                        TextButton(onClick = { viewModel.clearError() }) { Text("Dismiss") }
+                        TextButton(onClick = { viewModel.clearError() }) { Text(stringResource(R.string.dismiss)) }
                     }
                 ) { Text(error) }
             }
@@ -137,7 +140,7 @@ private fun SessionCard(session: Session, onClick: () -> Unit, onDelete: () -> U
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Agent: ${session.agentId.take(8)}...",
+              text = stringResource(R.string.agent_prefix, session.agentId.take(8)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -145,7 +148,7 @@ private fun SessionCard(session: Session, onClick: () -> Unit, onDelete: () -> U
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete session",
+                    contentDescription = stringResource(R.string.delete_session),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -155,7 +158,7 @@ private fun SessionCard(session: Session, onClick: () -> Unit, onDelete: () -> U
 
 @Composable
 private fun AddSessionDialog(
-rm: (agentId: String, projeId: String, path: String, name: String) -> Unit,
+    onConfirm: (agentId: String, projectId: String, path: String, name: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var agentId by remember { mutableStateOf("") }
@@ -165,34 +168,34 @@ rm: (agentId: String, projeId: String, path: String, name: String) -> Unit,
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Session") },
+        title = { Text(stringResource(R.string.add_session)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = t("Session Name") },
+                    label = { Text(stringResource(R.string.session_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = agentId,
                     onValueChange = { agentId = it },
-                    label = { Text("Agent ID") },
+                    label = { Text(stringResource(R.string.agent_id_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = projectId,
                     onValueChange = { projectId = it },
-                    label = { Text("Project ID") },
+                    label = { Text(stringResource(R.string.project_id_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = path,
                     onValueChange = { path = it },
-                    label = { Text("Project Path") },
+                    label = { Text(stringResource(R.string.project_path_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -205,10 +208,10 @@ rm: (agentId: String, projeId: String, path: String, name: String) -> Unit,
                         onConfirm(agentId.trim(), projectId.trim(), path.trim(), name.trim())
                     }
                 }
-            ) { Text("Add") }
+            ) { Text(stringResource(R.string.add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }
