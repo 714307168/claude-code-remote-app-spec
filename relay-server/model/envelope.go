@@ -30,6 +30,10 @@ const (
 	// File events
 	EventFileSync = "file.sync"
 
+	// E2E encryption events
+	EventE2EOffer  = "e2e.offer"
+	EventE2EAnswer = "e2e.answer"
+
 	// System events
 	EventPing  = "ping"
 	EventPong  = "pong"
@@ -120,4 +124,21 @@ type FileSyncPayload struct {
 	Content   string `json:"content"` // base64 encoded
 	Version   int64  `json:"version"`
 	Checksum  string `json:"checksum"`
+}
+
+// E2EOfferPayload is the payload for e2e.offer (public key exchange)
+type E2EOfferPayload struct {
+	PublicKey string `json:"public_key"` // base64-encoded X25519 public key
+}
+
+// E2EAnswerPayload is the payload for e2e.answer
+type E2EAnswerPayload struct {
+	PublicKey string `json:"public_key"` // base64-encoded X25519 public key
+}
+
+// EncryptedPayload wraps an encrypted message payload
+type EncryptedPayload struct {
+	Ciphertext string `json:"ciphertext"` // base64-encoded AES-256-GCM ciphertext
+	Nonce      string `json:"nonce"`      // base64-encoded 12-byte nonce
+	Encrypted  bool   `json:"encrypted"`  // always true
 }

@@ -1,0 +1,16 @@
+[Unit]
+Description=Claude Code Relay Server
+After=network.target
+
+[Service]
+Type=simple
+User=relay
+EnvironmentFile=/etc/relay/relay.env
+ExecStart=/usr/local/bin/relay-server
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

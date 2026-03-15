@@ -73,7 +73,7 @@ class MessageRepository(private val webSocket: RelayWebSocket) {
                 val streamId = envelope.streamId
                 if (streamId != null) {
                     streamBuffers.remove(streamId)
-             tStreamingMessage(projectId, streamId, "[Error receiving response]", isStreaming = false)
+                upsertStreamingMessage(projectId, streamId, "[Error receiving response]", isStreaming = false)
                 }
             }
         }
@@ -88,7 +88,7 @@ class MessageRepository(private val webSocket: RelayWebSocket) {
         _messages.value = current
     }
 
-    private fun upsertStreamingMessage(projectId: String, streamId: String, content: String, isStr Boolean) {
+    private fun upsertStreamingMessage(projectId: String, streamId: String, content: String, isStreaming: Boolean) {
         val current = _messages.value.toMutableMap()
         val projectMessages = (current[projectId] ?: emptyList()).toMutableList()
         val existingIndex = projectMessages.indexOfFirst { it.streamId == streamId }

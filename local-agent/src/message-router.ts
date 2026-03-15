@@ -1,8 +1,8 @@
-﻿import { v4 as uuidv4 } from 'uuid';
-import RelayClient from './relay-client';
-import ptyManager from './pty-manager';
-import projectStore from './project-store';
-import { Envelope, Events } from './types';
+import { v4 as uuidv4 } from "uuid";
+import RelayClient from "./relay-client";
+import ptyManager from "./pty-manager";
+import projectStore from "./project-store";
+import { Envelope, Events } from "./types";
 
 class MessageRouter {
   private relayClient: RelayClient;
@@ -10,7 +10,7 @@ class MessageRouter {
 
   constructor(relayClient: RelayClient) {
     this.relayClient = relayClient;
-    this.relayClient.on('message', (env: Envelope) => this.handleEnvelope(env));
+    this.relayClient.on("message", (env: Envelope) => this.handleEnvelope(env));
   }
 
   handleEnvelope(env: Envelope): void {
@@ -25,13 +25,13 @@ class MessageRouter {
         this.handleAgentWakeup(env);
         break;
       case Events.AUTH_OK:
-        console.log('[MessageRouter] Auth OK');
+        console.log("[MessageRouter] Auth OK");
         break;
       case Events.AUTH_ERROR:
-        console.error('[MessageRouter] Auth error:', env.payload);
+        console.error("[MessageRouter] Auth error:", env.payload);
         break;
       default:
-        console.log('[MessageRouter] Unhandled event: ' + env.event);
+        console.log("[MessageRouter] Unhandled event: " + env.event);
     }
   }
 
@@ -39,43 +39,43 @@ class MessageRouter {
     const projectId = env.project_id;
     const streamId = env.stream_id;
 
-    if (\!projectId || \!streamId) {
-      console.error('[MessageRouter] message.send missing project_id or stream_id');
+    if (!projectId || !streamId) {
+      console.error("[MessageRouter] message.send missing project_id or stream_id");
       return;
     }
 
     const project = projectStore.getById(projectId);
-    if (\!project) {
-      console.error('[MessageRouter] Unknown project: ' + projectId);
+    if (!project) {
+      console.error("[MessageRouter] Unknown project: " + projectId);
       this.relayClient.send({
         id: uuidv4(),
         event: Events.MESSAGE_ERROR,
         project_id: projectId,
         stream_id: streamId,
         ts: Date.now(),
-        payload: { error: 'Project ' + projectId + ' not found' },
+        payload: { error: "Project " + projectId + " not found" },
       });
       return;
     }
 
-    if (\!ptyManager.isAlive(projectId)) {
+    if (!ptyManager.isAlive(projectId)) {
       try {
         ptyManager.spawn(projectId, project.path);
       } catch (err) {
-        console.error('[MessageRouter] Failed to spawn PTY:', err);
+        console.error("[MessageRouter] Failed to spawn PTY:", err);
         this.relayClient.send({
           id: uuidv4(),
           event: Events.MESSAGE_ERROR,
           project_id: projectId,
           stream_id: streamId,
           ts: Date.now(),
-          payload: { error: 'Failed to start Claude session' },
+          payload: { error: "Failed to start Claude session" },
         });
         return;
       }
     }
 
-    const session = ptyManager.get(projectId)\!;
+    const session = ptyManager.get(projectId)!;
     const parser = session.parser;
 
     parser.reset();
@@ -86,30 +86,29 @@ class MessageRouter {
     };
 
     const onDone = () => {
-      this.sendChunk(projectId, streamId, '', true);
-      parser.removeListener('chunk', onChunk);
-      parser.removeListener('done', onDone);
+      this.sendChunk(projectId, streamId, "", true);
+      parser.removeListener("chunk", onChunk);
+      parser.removeListener("done", onDone);
       this.streamSeq.delete(streamId);
     };
 
-    parser.on('chunk', onChunk);
-    parser.once('done', onDone);
+    parser.on("chunk", onChunk);
+    parser.once("done", onDone);
 
     const payload = env.payload as { content?: string } | undefined;
-    const content = payload?.content ?? '';
+    const content = payload?.content ?? "";
     try {
-      ptyManager.write(projectId, content + '\n');
+      ptyManager.write(projectId, content + "\n");
     } catch (err) {
-      console.error('[MessageRouter] Failed to write to PTY:', err);
-      parser.removeListener('chunk', onChunk);
-      parser.removeListener('done', onDone);
+      console.error("[MessageRouter] Failed to write to PTY:", err);
+      parser.removeListener("chunk", onChunk);
+      parser.removeListener("done", onDone);
       this.relayClient.send({
-        id: uuidv4(),
-        event: Events.MESSAGE_ERROR,
+        id: uuidv4(), event: Events.MESSAGE_ERROR,
         project_id: projectId,
         stream_id: streamId,
         ts: Date.now(),
-        payload: { error: 'Failed to send message to Claude' },
+        payload: { error: "Failed to send message to Claude" },
       });
     }
   }
@@ -122,8 +121,8 @@ class MessageRouter {
       agent_id?: string;
     } | undefined;
 
-    if (\!payload?.id || \!payload?.name || \!payload?.path) {
-      console.error('[MessageRouter] project.bind missing required fields');
+    if (!payload?.id || !payload?.name || !payload?.path) {
+      console.error("[MessageRouter] project.bind missing required fields");
       return;
     }
 
@@ -135,12 +134,12 @@ class MessageRouter {
         id: payload.id,
         name: payload.name,
         path: payload.path,
-        agentId: payload.agent_id ?? '',
+        agentId: payload.agent_id ?? "",
         createdAt: Date.now(),
       });
     }
 
-    console.log('[MessageRouter] Project bound: ' + payload.name + ' (' + payload.id + ')');
+    console.log("[MessageRouter] Project bound: " + payload.name + " (" + payload.id + ")");
 
     this.relayClient.send({
       id: uuidv4(),
@@ -152,7 +151,7 @@ class MessageRouter {
   }
 
   private handleAgentWakeup(env: Envelope): void {
-    console.log('[MessageRouter] Agent wakeup received', env.payload);
+    console.log("[MessageRouter] Agent wakeup received", env.payload);
   }
 
   private sendChunk(
@@ -160,7 +159,8 @@ class MessageRouter {
     streamId: string,
     content: string,
     done: boolean
-  ): void  const seq = (this.streamSeq.get(streamId) ?? 0) + 1;
+  ): void {
+    const seq = (this.streamSeq.get(streamId) ?? 0) + 1;
     this.streamSeq.set(streamId, seq);
 
     this.relayClient.send({

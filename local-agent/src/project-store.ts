@@ -1,4 +1,4 @@
-import Store from 'electron-store';
+import Store from "electron-store";
 
 interface Project {
   id: string;
@@ -24,16 +24,16 @@ class ProjectStore {
   add(project: Project): void {
     const projects = this.getAll();
     projects.push(project);
-    this.store.set('projects', projects);
+    this.store.set("projects", projects);
   }
 
   remove(id: string): void {
-    const projects = this.getAll().filter((p) => p.id !== id);
-    this.store.set('projects', projects);
+    const projects = this.getAll().filter((p) => p.id \!== id);
+    this.store.set("projects", projects);
   }
 
   getAll(): Project[] {
-    return this.store.get('projects', []);
+    return this.store.get("projects", []);
   }
 
   getById(id: string): Project | undefined {
@@ -44,7 +44,7 @@ class ProjectStore {
     const projects = this.getAll().map((p) =>
       p.id === id ? { ...p, ...updates } : p
     );
-    this.store.set('projects', projects);
+    this.store.set("projects", projects);
   }
 }
 

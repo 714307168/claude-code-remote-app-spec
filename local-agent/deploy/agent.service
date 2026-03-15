@@ -1,0 +1,18 @@
+﻿[Unit]
+Description=Claude Code Agent
+After=network.target graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+User=%i
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+ExecStart=/usr/bin/claude-code-agent --no-sandbox
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,37 @@
+# === IDE ===
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === Go (relay-server) ===
+relay-server/relay-server
+relay-server/relay-server.exe
+relay-server/vendor/
+
+# === Node / Electron (local-agent) ===
+local-agent/node_modules/
+local-agent/dist/
+local-agent/out/
+local-agent/.env
+local-agent/*.log
+
+# === Android (android-app) ===
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+android-app/captures/
+android-app/.cxx/
+
+# === General ===
+*.log
+*.env
+*.env.*

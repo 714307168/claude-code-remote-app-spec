@@ -31,6 +31,24 @@ class TokenStore(context: Context) {
 
     fun getServerUrl(): String? = prefs.getString(KEY_SERVER_URL, null)
 
+    fun saveE2EEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_E2E_ENABLED, enabled).apply()
+    }
+
+    fun isE2EEnabled(): Boolean = prefs.getBoolean(KEY_E2E_ENABLED, false)
+
+    fun saveE2EPrivateKey(key: String) {
+        prefs.edit().putString(KEY_E2E_PRIVATE, key).apply()
+    }
+
+    fun getE2EPrivateKey(): String? = prefs.getString(KEY_E2E_PRIVATE, null)
+
+    fun saveE2EPublicKey(key: String) {
+        prefs.edit().putString(KEY_E2E_PUBLIC, key).apply()
+    }
+
+    fun getE2EPublicKey(): String? = prefs.getString(KEY_E2E_PUBLIC, null)
+
     fun clear() {
         prefs.edit().clear().apply()
     }
@@ -39,5 +57,8 @@ class TokenStore(context: Context) {
         private const val KEY_TOKEN = "jwt_token"
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_SERVER_URL = "server_url"
+        private const val KEY_E2E_ENABLED = "e2e_enabled"
+        private const val KEY_E2E_PRIVATE = "e2e_private_key"
+        private const val KEY_E2E_PUBLIC = "e2e_public_key"
     }
 }

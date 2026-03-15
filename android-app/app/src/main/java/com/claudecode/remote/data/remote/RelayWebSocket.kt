@@ -110,7 +110,7 @@ class RelayWebSocket(
     }
 
     private fun authenticate() {
-        val token = tokenetToken()
+        val token = tokenStore.getToken()
         val event = if (lastSeq > 0) Events.AUTH_RESUME else Events.AUTH_LOGIN
         val payload = buildJsonObject {
             put("token", JsonPrimitive(token ?: ""))
@@ -149,7 +149,7 @@ class RelayWebSocket(
             while (true) {
                 delay(30_000)
                 if (_connectionState.value == ConnectionState.CONNECTED) {
-              send(
+                    send(
                         Envelope(
                             id = UUID.randomUUID().toString(),
                             event = Events.PING,
@@ -169,7 +169,7 @@ class RelayWebSocket(
     private fun scheduleReconnect() {
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
-            val backoffSecminOf(30L, 1L shl reconnectAtte
+            val backoffSeconds = minOf(30L, 1L shl reconnectAttempts)
             Log.d(tag, "Reconnecting in ${backoffSeconds}s (attempt ${reconnectAttempts + 1})")
             delay(backoffSeconds * 1000)
             reconnectAttempts++

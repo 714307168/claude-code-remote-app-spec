@@ -12,6 +12,9 @@ type Config struct {
 	LogLevel     string
 	PingInterval int // seconds
 	QueueSize    int // ring buffer size per project
+	TLSCert      string
+	TLSKey       string
+	CORSOrigins  string // comma-separated allowed origins, "*" for all
 }
 
 func Load() *Config {
@@ -21,6 +24,9 @@ func Load() *Config {
 	flag.StringVar(&c.LogLevel, "log-level", getEnv("LOG_LEVEL", "info"), "Log level")
 	flag.IntVar(&c.PingInterval, "ping-interval", getEnvInt("PING_INTERVAL", 30), "WS ping interval seconds")
 	flag.IntVar(&c.QueueSize, "queue-size", getEnvInt("QUEUE_SIZE", 100), "Per-project message queue size")
+	flag.StringVar(&c.TLSCert, "tls-cert", getEnv("TLS_CERT", ""), "TLS certificate file path")
+	flag.StringVar(&c.TLSKey, "tls-key", getEnv("TLS_KEY", ""), "TLS private key file path")
+	flag.StringVar(&c.CORSOrigins, "cors-origins", getEnv("CORS_ORIGINS", "*"), "Allowed CORS origins (comma-separated)")
 	flag.Parse()
 	return c
 }

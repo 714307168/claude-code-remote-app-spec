@@ -1,27 +1,25 @@
-import { EventEmitter } from 'events';
-import stripAnsi from 'strip-ansi';
+import { EventEmitter } from "events";
+import stripAnsi from "strip-ansi";
 
 class OutputParser extends EventEmitter {
-  private buffer: string = '';
+  private buffer: string = "";
   private inResponse: boolean = false;
   private debounceTimer: NodeJS.Timeout | null = null;
-  private chunkBuffer: string = '';
+  private chunkBuffer: string = "";
 
   feed(data: string): void {
     const clean = stripAnsi(data);
     this.buffer += clean;
 
-    // Detect prompt patterns indicating Claude is waiting for input
-    // Claude Code prompt ends with "> " or "? " on a new line
-    const promptPattern = /(\n|^)[>\?]\s*$/;
-    const interactivePattern = /(\n|^)>\s*$/m;
+    // Prompt patterns: Claude Code shows "> " or "? " on a new line when waiting
+    const promptPattern = /(
+|^)[>?]\s*$/;
 
-    if (!this.inResponse) {
-      // Start capturing after we see content that isn't just the prompt
-      const lines = this.buffer.split('\n');
-      // Look for non-empty, non-prompt lines as signal that response started
+    if (\!this.inResponse) {
+      const lines = this.buffer.split("
+");
       const hasContent = lines.some(
-        (l) => l.trim().length > 0 && !/^[>\?]\s*$/.test(l.trim())
+        (l) => l.trim().length > 0 && \!/^[>?]\s*$/.test(l.trim())
       );
       if (hasContent) {
         this.inResponse = true;
@@ -31,9 +29,7 @@ class OutputParser extends EventEmitter {
     } else {
       this.chunkBuffer += clean;
       this.scheduleFlush();
-
-      // Check if Claude prompt appeared — response is done
-      if (promptPattern.test(this.buffer) || interactivePattern.test(this.buffer)) {
+      if (promptPattern.test(this.buffer)) {
         this.finalize();
       }
     }
@@ -41,16 +37,14 @@ class OutputParser extends EventEmitter {
 
   private scheduleFlush(): void {
     if (this.debounceTimer) return;
-    this.debounceTimer = setTimeout(() => {
-      this.flush();
-    }, 50);
+    this.debounceTimer = setTimeout(() => this.flush(), 50);
   }
 
   private flush(): void {
     this.debounceTimer = null;
     if (this.chunkBuffer.length > 0) {
-      this.emit('chunk', this.chunkBuffer);
-      this.chunkBuffer = '';
+      this.emit("chunk", this.chunkBuffer);
+      this.chunkBuffer = "";
     }
   }
 
@@ -59,15 +53,14 @@ class OutputParser extends EventEmitter {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    // Flush any remaining chunk content
     if (this.chunkBuffer.length > 0) {
-      this.emit('chunk', this.chunkBuffer);
-      this.chunkBuffer = '';
+      this.emit("chunk", this.chunkBuffer);
+      this.chunkBuffer = "";
     }
-    this.emit('done');
-    this.emit('prompt');
+    this.emit("done");
+    this.emit("prompt");
     this.inResponse = false;
-    this.buffer = '';
+    this.buffer = "";
   }
 
   reset(): void {
@@ -75,9 +68,9 @@ class OutputParser extends EventEmitter {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    this.buffer = '';
+    this.buffer = "";
     this.inResponse = false;
-    this.chunkBuffer = '';
+    this.chunkBuffer = "";
   }
 }
 

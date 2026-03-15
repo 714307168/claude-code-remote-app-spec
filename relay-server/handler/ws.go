@@ -149,7 +149,8 @@ func writeError(conn *websocket.Conn, refID, code, message string) {
 		ID:        uuid.New().String(),
 		Event:     model.EventAuthError,
 		Timestamp: time.Now().UnixMilli(),
-		Payload:   payl
+		Payload:   payload,
+	}
 	data, _ := json.Marshal(env)
 	_ = conn.WriteMessage(websocket.TextMessage, data)
 }

@@ -68,7 +68,7 @@ func (h *Hub) Unregister(client *Client) {
 					ProjectID: projectID,
 				})
 				env := &model.Envelope{
-	\		ID:        newID(),
+					ID:        newID(),
 					Event:     model.EventAgentStatus,
 					ProjectID: projectID,
 					Seq:       h.NextSeq(),
@@ -117,7 +117,8 @@ func (h *Hub) HandleMessage(from *Client, env *model.Envelope) {
 		log.Info().Str("project_id", p.ProjectID).Str("agent_id", from.AgentID).Msg("project bound")
 
 		ack := &model.Envelope{
-			ID:        newID	Event:     model.EventProjectBound,
+							ID:        newID(),
+			Event:     model.EventProjectBound,
 			ProjectID: p.ProjectID,
 			Seq:       h.NextSeq(),
 			Timestamp: time.Now().UnixMilli(),
@@ -126,7 +127,7 @@ func (h *Hub) HandleMessage(from *Client, env *model.Envelope) {
 
 	case model.EventPing:
 		pong := &model.Envelope{
-			ID:        newID(),
+									ID:        newID(),
 			Event:     model.EventPong,
 			Seq:       h.NextSeq(),
 			Timestamp: time.Now().UnixMilli(),
@@ -145,6 +146,28 @@ func (h *Hub) HandleMessage(from *Client, env *model.Envelope) {
 			if ok {
 				h.Route(env, agentID)
 			}
+		}
+
+	case model.EventE2EOffer:
+		// Forward public key offer: agent->devices or device->agent
+		if from.Type == model.ClientTypeAgent {
+			h.BroadcastToDevices(env, env.ProjectID)
+		} else {
+			agentID, ok := h.resolveAgent(env.ProjectID)
+			if ok {
+				h.Route(env, agentID)
+			}
+		}
+
+	case model.EventE2EAnswer:
+		// Forward public key answer: device->agent or agent->devices
+		if from.Type == model.ClientTypeDevice {
+			agentID, ok := h.resolveAgent(env.ProjectID)
+			if ok {
+				h.Route(env, agentID)
+			}
+		} else {
+			h.BroadcastToDevices(env, env.ProjectID)
 		}
 
 	default:
@@ -209,4 +232,21 @@ func (h *Hub) sendError(to *Client, refID, code, message string) {
 		Payload:   payload,
 	}
 	_ = to.Send(env)
+}
+
+// BindProject registers a project->agent mapping (used by REST handler).
+func (h *Hub) BindProject(projectID, agentID string) {
+	h.projects.Store(projectID, agentID)
+	log.Info().Str("project_id", projectID).Str("agent_id", agentID).Msg("project bound via REST")
+}
+
+// SendToAgent delivers env to the agent if online; returns true if delivered.
+func (h *Hub) SendToAgent(agentID string, env *model.Envelope) bool {
+	v, ok := h.agents.Load(agentID)
+	if !ok {
+		return false
+	}
+	agent := v.(*Client)
+	_ = agent.Send(env)
+	return true
 }

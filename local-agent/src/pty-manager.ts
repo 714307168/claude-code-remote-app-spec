@@ -1,5 +1,5 @@
-import * as pty from 'node-pty';
-import OutputParser from './output-parser';
+import * as pty from "node-pty";
+import OutputParser from "./output-parser";
 
 interface PtySession {
   pty: pty.IPty;
@@ -12,23 +12,22 @@ class PtyManager {
   private sessions: Map<string, PtySession> = new Map();
 
   spawn(projectId: string, cwd: string): PtySession {
-    // Kill existing session if any
     if (this.sessions.has(projectId)) {
       this.kill(projectId);
     }
 
-    const isWindows = process.platform === 'win32';
-    const shell = isWindows ? 'cmd.exe' : 'bash';
-    const args = isWindows ? ['/c', 'claude'] : ['-c', 'claude'];
+    const isWindows = process.platform === "win32";
+    const shell = isWindows ? "cmd.exe" : "bash";
+    const args = isWindows ? ["/c", "claude"] : ["-c", "claude"];
 
     const ptyProcess = pty.spawn(shell, args, {
-      name: 'xterm-256color',
+      name: "xterm-256color",
       cols: 220,
       rows: 50,
       cwd,
       env: {
         ...process.env,
-        TERM: 'xterm-256color',
+        TERM: "xterm-256color",
       } as { [key: string]: string },
     });
 
@@ -49,7 +48,7 @@ class PtyManager {
 
   write(projectId: string, input: string): void {
     const session = this.sessions.get(projectId);
-    if (!session) {
+    if (\!session) {
       throw new Error(`No PTY session for project ${projectId}`);
     }
     session.pty.write(input);

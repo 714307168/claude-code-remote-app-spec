@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Claude Code Remote</string>
+    <string name="sessions_title">Sessions</string>
+    <string name="add_session">Add Session</string>
+    <string name="no_sessions">No sessions yet. Tap + to add one.</string>
+    <string name="session_name_label">Session Name</string>
+    <string name="agent_id_label">Agent ID</string>
+    <string name="project_id_label">Project ID</string>
+    <string name="project_path_label">Project Path</string>
+    <string name="server_url_label">Server URL</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_session">Delete session</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="send_message">Send</string>
+    <string name="message_hint">Type a message...</string>
+    <string name="no_messages">No messages yet. Start a conversation.</string>
+    <string name="back">Back</string>
+    <string name="error_not_authenticated">Not authenticated</string>
+    <string name="error_connection_failed">Connection failed</string>
+    <string name="dismiss">Dismiss</string>
+</resources>

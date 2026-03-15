@@ -1,4 +1,4 @@
-export type ClientType = 'agent' | 'device';
+export type ClientType = "agent" | "device";
 
 export interface Envelope {
   id: string;
@@ -11,23 +11,25 @@ export interface Envelope {
 }
 
 export const Events = {
-  AUTH_LOGIN: 'auth.login',
-  AUTH_RESUME: 'auth.resume',
-  AUTH_REFRESH: 'auth.refresh',
-  AUTH_OK: 'auth.ok',
-  AUTH_ERROR: 'auth.error',
-  PROJECT_BIND: 'project.bind',
-  PROJECT_BOUND: 'project.bound',
-  MESSAGE_SEND: 'message.send',
-  MESSAGE_CHUNK: 'message.chunk',
-  MESSAGE_DONE: 'message.done',
-  MESSAGE_ERROR: 'message.error',
-  AGENT_STATUS: 'agent.status',
-  AGENT_WAKEUP: 'agent.wakeup',
-  FILE_SYNC: 'file.sync',
-  PING: 'ping',
-  PONG: 'pong',
-  ERROR: 'error',
+  AUTH_LOGIN:    "auth.login",
+  AUTH_RESUME:   "auth.resume",
+  AUTH_REFRESH:  "auth.refresh",
+  AUTH_OK:       "auth.ok",
+  AUTH_ERROR:    "auth.error",
+  PROJECT_BIND:  "project.bind",
+  PROJECT_BOUND: "project.bound",
+  MESSAGE_SEND:  "message.send",
+  MESSAGE_CHUNK: "message.chunk",
+  MESSAGE_DONE:  "message.done",
+  MESSAGE_ERROR: "message.error",
+  AGENT_STATUS:  "agent.status",
+  AGENT_WAKEUP:  "agent.wakeup",
+  FILE_SYNC:     "file.sync",
+  E2E_OFFER:     "e2e.offer",
+  E2E_ANSWER:    "e2e.answer",
+  PING:          "ping",
+  PONG:          "pong",
+  ERROR:         "error",
 } as const;
 
 export type EventType = typeof Events[keyof typeof Events];
