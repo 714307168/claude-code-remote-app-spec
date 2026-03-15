@@ -1,0 +1,29 @@
+appId: com.claudecode.agent
+productName: "Claude Code Agent"
+asar: true
+
+directories:
+  output: release
+
+extraResources:
+  - from: node_modules/node-pty
+    to: node_modules/node-pty
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64

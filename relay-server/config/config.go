@@ -1,0 +1,42 @@
+package config
+
+import (
+	"flag"
+	"os"
+	"strconv"
+)
+
+type Config struct {
+	Port         string
+	JWTSecret    string
+	LogLevel     string
+	PingInterval int // seconds
+	QueueSize    int // ring buffer size per project
+}
+
+func Load() *Config {
+	c := &Config{}
+	flag.StringVar(&c.Port, "port", getEnv("PORT", "8080"), "HTTP listen port")
+	flag.StringVar(&c.JWTSecret, "jwt-secret", getEnv("JWT_SECRET", "change-me-in-production"), "JWT signing secret")
+	flag.StringVar(&c.LogLevel, "log-level", getEnv("LOG_LEVEL", "info"), "Log level")
+	flag.IntVar(&c.PingInterval, "ping-interval", getEnvInt("PING_INTERVAL", 30), "WS ping interval seconds")
+	flag.IntVar(&c.QueueSize, "queue-size", getEnvInt("QUEUE_SIZE", 100), "Per-project message queue size")
+	flag.Parse()
+	return c
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if i, err := strconv.Atoi(v); err == nil {
+			return i
+		}
+	}
+	return fallback
+}

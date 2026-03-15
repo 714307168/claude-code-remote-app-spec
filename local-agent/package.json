@@ -1,0 +1,31 @@
+{
+  "name": "claude-code-agent",
+  "version": "1.0.0",
+  "description": "Local agent for Claude Code remote control",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "electron dist/main.js",
+    "dev": "tsc --watch",
+    "rebuild": "electron-rebuild",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "node-pty": "^1.0.0",
+    "strip-ansi": "^7.1.0",
+    "uuid": "^9.0.0",
+    "ws": "^8.16.0",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "@types/ws": "^8.5.10",
+    "electron": "^29.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^5.3.3"
+  }
+}
